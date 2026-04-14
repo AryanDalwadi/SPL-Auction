@@ -171,6 +171,46 @@ function App() {
     });
   };
 
+  const deleteTeam = (teamId) => {
+    const team = teams.find((t) => t.id === teamId);
+    if (!team) {
+      setMessage("Team not found.");
+      return;
+    }
+    const soldHere = players.filter((p) => p.soldToTeamId === teamId).length;
+    const detail =
+      soldHere > 0
+        ? ` ${soldHere} bought player(s) will return to Available.`
+        : "";
+    if (
+      !window.confirm(`Delete team "${team.teamName}"?${detail} This cannot be undone.`)
+    ) {
+      return;
+    }
+
+    updateAuctionState((prev) => {
+      const t = prev.teams.find((x) => x.id === teamId);
+      if (!t) return prev;
+
+      const updatedPlayers = prev.players.map((p) => {
+        if (p.soldToTeamId !== teamId) return p;
+        return {
+          ...p,
+          status: "available",
+          soldToTeamId: null,
+          finalBid: null,
+        };
+      });
+
+      setMessage(`Team "${t.teamName}" removed.`);
+      return {
+        ...prev,
+        teams: prev.teams.filter((x) => x.id !== teamId),
+        players: updatedPlayers,
+      };
+    });
+  };
+
   const addPlayer = ({ name, category, set, photoDataUrl }) => {
     updateAuctionState((prev) => {
       const duplicatePlayer = prev.players.some(
@@ -303,6 +343,41 @@ function App() {
       return {
         ...prev,
         players: updatedPlayers,
+      };
+    });
+  };
+
+  const deletePlayer = (playerId) => {
+    const player = players.find((p) => p.id === playerId);
+    if (!player) {
+      setMessage("Player not found.");
+      return;
+    }
+    if (player.status === "sold") {
+      setMessage(
+        "Cannot delete a sold player. Revert the sale from the Dashboard first.",
+      );
+      return;
+    }
+    if (!window.confirm(`Delete player "${player.name}"? This cannot be undone.`)) {
+      return;
+    }
+
+    updateAuctionState((prev) => {
+      const p = prev.players.find((x) => x.id === playerId);
+      if (!p || p.status === "sold") return prev;
+
+      setMessage(`Player "${p.name}" removed.`);
+      return {
+        ...prev,
+        players: prev.players.filter((x) => x.id !== playerId),
+        auction: {
+          ...prev.auction,
+          currentPlayerId:
+            prev.auction.currentPlayerId === playerId
+              ? null
+              : prev.auction.currentPlayerId,
+        },
       };
     });
   };
@@ -702,6 +777,7 @@ function App() {
             teams={teams}
             onAddTeam={addTeam}
             onUpdateTeam={updateTeam}
+            onDeleteTeam={deleteTeam}
             onShareTeamLink={shareTeamLink}
             onSetTeamLogo={setTeamLogo}
             onNotify={setMessage}
@@ -715,6 +791,7 @@ function App() {
             players={players}
             onAddPlayer={addPlayer}
             onUpdatePlayer={updatePlayer}
+            onDeletePlayer={deletePlayer}
             onImportPlayers={importPlayersFromRows}
             onSetPlayerPhoto={setPlayerPhoto}
             onNotify={setMessage}

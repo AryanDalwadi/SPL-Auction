@@ -4,6 +4,7 @@ function TeamManager({
   teams,
   onAddTeam,
   onUpdateTeam,
+  onDeleteTeam,
   onShareTeamLink,
   onSetTeamLogo,
   onNotify,
@@ -97,6 +98,17 @@ function TeamManager({
       ...prev,
       [teamId]: link,
     }))
+  }
+
+  const handleDeleteTeam = (team) => {
+    if (!onDeleteTeam) return
+    if (editingTeamId === team.id) cancelEdit()
+    onDeleteTeam(team.id)
+    setShareLinksByTeamId((prev) => {
+      const next = { ...prev }
+      delete next[team.id]
+      return next
+    })
   }
 
   const totalTeams = teams.length
@@ -235,6 +247,15 @@ function TeamManager({
                       <button type="button" onClick={() => generateShareLink(team.id)}>
                         Share Link
                       </button>
+                      {onDeleteTeam ? (
+                        <button
+                          type="button"
+                          className="btn-danger-outline"
+                          onClick={() => handleDeleteTeam(team)}
+                        >
+                          Delete
+                        </button>
+                      ) : null}
                     </div>
                   )}
                   {shareLinksByTeamId[team.id] ? (

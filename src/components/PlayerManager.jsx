@@ -5,6 +5,7 @@ function PlayerManager({
   players,
   onAddPlayer,
   onUpdatePlayer,
+  onDeletePlayer,
   onImportPlayers,
   onSetPlayerPhoto,
   onNotify,
@@ -87,6 +88,12 @@ function PlayerManager({
       set: editSet,
     })
     cancelEdit()
+  }
+
+  const handleDeletePlayer = (player) => {
+    if (!onDeletePlayer) return
+    if (editingPlayerId === player.id) cancelEdit()
+    onDeletePlayer(player.id)
   }
 
   const totalPlayers = players.length
@@ -321,9 +328,20 @@ function PlayerManager({
                       </button>
                     </div>
                   ) : (
-                    <button type="button" onClick={() => startEdit(player)} disabled={player.status === 'sold'}>
-                      Edit
-                    </button>
+                    <div className="table-actions">
+                      <button type="button" onClick={() => startEdit(player)} disabled={player.status === 'sold'}>
+                        Edit
+                      </button>
+                      {onDeletePlayer && player.status !== 'sold' ? (
+                        <button
+                          type="button"
+                          className="btn-danger-outline"
+                          onClick={() => handleDeletePlayer(player)}
+                        >
+                          Delete
+                        </button>
+                      ) : null}
+                    </div>
                   )}
                 </td>
               </tr>

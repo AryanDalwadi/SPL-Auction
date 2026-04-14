@@ -2,51 +2,34 @@ import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { getSetUiClass, PLAYER_SETS, SET_LOGOS } from '../utils/auctionRules'
 
-/** Even-index wedges: unique dark tones. Odd-index wedges: unique light tones. Same color for chip + wedge. */
-const WHEEL_DARK_WEDGES = [
-  '#111f35',
-  '#1c2d4a',
-  '#2d1f3a',
-  '#152238',
-  '#1e2636',
-  '#2a1c28',
-  '#0f2538',
-  '#251f30',
-]
+const WHEEL_BG = '#111f35'
 
-/** Light wedges: coral / soft red family (like #FA5C5C), each unique */
-const WHEEL_LIGHT_WEDGES = [
-  '#fa5c5c',
-  '#ff6b6b',
-  '#f87171',
-  '#fc8181',
-  '#ff8a8a',
-  '#fca5a5',
-  '#feb2b2',
-  '#fecaca',
-]
-
-function getWedgeColor(segmentIndex) {
-  if (segmentIndex % 2 === 0) {
-    const k = (segmentIndex / 2) % WHEEL_DARK_WEDGES.length
-    return WHEEL_DARK_WEDGES[k]
-  }
-  const k = Math.floor(segmentIndex / 2) % WHEEL_LIGHT_WEDGES.length
-  return WHEEL_LIGHT_WEDGES[k]
-}
-
+/** Uniform fill with thin white rays between segments. */
 function buildWheelConicGradient(segmentCount) {
   if (segmentCount <= 0) {
-    const a = WHEEL_DARK_WEDGES[0]
-    const b = WHEEL_LIGHT_WEDGES[0]
-    return `conic-gradient(from 0deg at 50% 50%, ${a} 0deg 180deg, ${b} 180deg 360deg)`
+    return `conic-gradient(from 0deg at 50% 50%, ${WHEEL_BG} 0deg 360deg)`
   }
-  const parts = []
-  for (let i = 0; i < segmentCount; i += 1) {
-    const startDeg = (i * 360) / segmentCount
-    const endDeg = i === segmentCount - 1 ? 360 : ((i + 1) * 360) / segmentCount
-    parts.push(`${getWedgeColor(i)} ${startDeg}deg ${endDeg}deg`)
+  if (segmentCount === 1) {
+    return `conic-gradient(from 0deg at 50% 50%, ${WHEEL_BG} 0deg 360deg)`
   }
+  const seg = 360 / segmentCount
+  let borderDeg = 1.2
+  if (seg < borderDeg * 2.5) {
+    borderDeg = Math.max(0.35, seg * 0.12)
+  }
+  const b = borderDeg
+  const parts = [`white 0deg ${b / 2}deg`]
+  for (let k = 0; k < segmentCount; k += 1) {
+    const c0 = k * seg + b / 2
+    const c1 = (k + 1) * seg - b / 2
+    parts.push(`${WHEEL_BG} ${c0}deg ${c1}deg`)
+    if (k < segmentCount - 1) {
+      const w0 = (k + 1) * seg - b / 2
+      const w1 = (k + 1) * seg + b / 2
+      parts.push(`white ${w0}deg ${w1}deg`)
+    }
+  }
+  parts.push(`white ${360 - b / 2}deg 360deg`)
   return `conic-gradient(from 0deg at 50% 50%, ${parts.join(', ')})`
 }
 
@@ -248,14 +231,7 @@ function AuctionPanel({
                           transform: `translate(-50%, -50%) rotate(${midAngle}deg) translateY(var(--wheel-pull)) rotate(${-midAngle}deg)`,
                         }}
                       >
-                        <span
-                          className={`wheel-item-text ${index % 2 === 0 ? 'wheel-item-text--on-dark-wedge' : 'wheel-item-text--on-light-wedge'}`}
-                          style={{
-                            backgroundColor:
-                              index % 2 === 0 ? getWedgeColor(index) : '#ffffff',
-                            color: index % 2 === 0 ? '#f8fafc' : '#111f35',
-                          }}
-                        >
+                        <span className="wheel-item-text wheel-item-text--on-light-wedge">
                           {player.name}
                         </span>
                       </span>
