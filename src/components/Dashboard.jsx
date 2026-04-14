@@ -1,5 +1,10 @@
 import { useMemo, useState } from 'react'
-import { getSetUiClass, SET_LOGOS } from '../utils/auctionRules'
+import {
+  getRemainingRoomUnderSetCap,
+  getTotalPointsSpentByTeam,
+  getSetUiClass,
+  SET_LOGOS,
+} from '../utils/auctionRules'
 
 function Dashboard({
   teams,
@@ -62,16 +67,29 @@ function Dashboard({
       </div>
 
       <h3 className="dashboard-heading">Teams overview</h3>
+      <p className="dashboard-table-note">
+        Set columns show <strong>remaining room</strong> under each cap (750 / 1000 / 1200). Any purchase
+        subtracts from <strong>all three</strong> against the same total spend.
+      </p>
       <div className="table-shell">
         <table>
         <thead>
           <tr>
             <th>Team</th>
             <th>Total</th>
-            <th>Remaining</th>
-            <th>Set A</th>
-            <th>Set B</th>
-            <th>Set C</th>
+            <th>Wallet left</th>
+            <th>
+              Set A left
+              <span className="th-cap">max {setLimits['Set A']}</span>
+            </th>
+            <th>
+              Set B left
+              <span className="th-cap">max {setLimits['Set B']}</span>
+            </th>
+            <th>
+              Set C left
+              <span className="th-cap">max {setLimits['Set C']}</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -82,23 +100,34 @@ function Dashboard({
           ) : (
             teams.map((team) => (
               <tr key={team.id}>
-                <td>{team.teamName}</td>
+                <td>
+                  {team.teamName}
+                  <span className="dashboard-team-spent">
+                    Total spent: {getTotalPointsSpentByTeam(team)}
+                  </span>
+                </td>
                 <td>{team.totalPoints}</td>
                 <td>{team.remainingPoints}</td>
                 <td>
                   <span className={`set-logo inline ${getSetUiClass('Set A')}`}>{SET_LOGOS['Set A']}</span>
                   <br />
-                  {team.spentBySet['Set A']}/{setLimits['Set A']}
+                  <span className="dashboard-spend-main">
+                    {getRemainingRoomUnderSetCap(team, 'Set A')}
+                  </span>
                 </td>
                 <td>
                   <span className={`set-logo inline ${getSetUiClass('Set B')}`}>{SET_LOGOS['Set B']}</span>
                   <br />
-                  {team.spentBySet['Set B']}/{setLimits['Set B']}
+                  <span className="dashboard-spend-main">
+                    {getRemainingRoomUnderSetCap(team, 'Set B')}
+                  </span>
                 </td>
                 <td>
                   <span className={`set-logo inline ${getSetUiClass('Set C')}`}>{SET_LOGOS['Set C']}</span>
                   <br />
-                  {team.spentBySet['Set C']}/{setLimits['Set C']}
+                  <span className="dashboard-spend-main">
+                    {getRemainingRoomUnderSetCap(team, 'Set C')}
+                  </span>
                 </td>
               </tr>
             ))

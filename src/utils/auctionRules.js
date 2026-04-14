@@ -20,11 +20,25 @@ export function createId() {
   return `id-${Date.now()}-${Math.floor(Math.random() * 100000)}`
 }
 
+/**
+ * Set auction runs in two passes: all `available` players first, then only `unsold`
+ * (re-auction) after no `available` players remain in that set.
+ */
+export function getSetAuctionEligibility(players, currentSet) {
+  const inSet = players.filter((player) => player.set === currentSet)
+  const available = inSet.filter((player) => player.status === 'available')
+  if (available.length > 0) {
+    return { eligible: available, round: 'available' }
+  }
+  const unsold = inSet.filter((player) => player.status === 'unsold')
+  return {
+    eligible: unsold,
+    round: unsold.length > 0 ? 'unsold' : 'none',
+  }
+}
+
 export function getEligiblePlayers(players, currentSet) {
-  return players.filter((player) => {
-    if (player.set !== currentSet) return false
-    return player.status === 'available' || player.status === 'unsold'
-  })
+  return getSetAuctionEligibility(players, currentSet).eligible
 }
 
 export function pickRandomPlayer(players, currentSet) {
@@ -32,6 +46,21 @@ export function pickRandomPlayer(players, currentSet) {
   if (eligiblePlayers.length === 0) return null
   const randomIndex = Math.floor(Math.random() * eligiblePlayers.length)
   return eligiblePlayers[randomIndex]
+}
+
+/** Points already committed (all sets combined): total budget minus wallet. */
+export function getTotalPointsSpentByTeam(team) {
+  return Math.max(0, team.totalPoints - team.remainingPoints)
+}
+
+/**
+ * Room left under a set’s printed cap after counting the team’s **total** spend.
+ * Example: spent 250 → Set A shows 500 left (750−250), Set B 750 (1000−250), Set C 950 (1200−250).
+ */
+export function getRemainingRoomUnderSetCap(team, setName) {
+  const cap = SET_LIMITS[setName]
+  if (cap == null) return 0
+  return Math.max(0, cap - getTotalPointsSpentByTeam(team))
 }
 
 export function validateSale({ team, playerSet, bidAmount }) {
@@ -47,12 +76,14 @@ export function validateSale({ team, playerSet, bidAmount }) {
     return { valid: false, message: 'Team does not have enough remaining points.' }
   }
 
-  const setLimit = SET_LIMITS[playerSet] ?? Number.POSITIVE_INFINITY
-  const spentForSet = team.spentBySet[playerSet] ?? 0
-  if (spentForSet + bidAmount > setLimit) {
-    return {
-      valid: false,
-      message: `${team.teamName} exceeds ${playerSet} limit of ${setLimit}.`,
+  const cap = SET_LIMITS[playerSet]
+  if (cap != null) {
+    const spentTotal = getTotalPointsSpentByTeam(team)
+    if (spentTotal + bidAmount > cap) {
+      return {
+        valid: false,
+        message: `${team.teamName} would go over the ${playerSet} ceiling (${cap}). Team has spent ${spentTotal} points in total across all sets.`,
+      }
     }
   }
 

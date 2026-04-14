@@ -10,6 +10,7 @@ import {
   createId,
   downloadJson,
   getEligiblePlayers,
+  getSetAuctionEligibility,
   PLAYER_SETS,
   readSharedTeamFromUrl,
   SET_LOGOS,
@@ -50,8 +51,17 @@ function App() {
       ) ?? null,
     [players, auctionState.auction.currentPlayerId],
   );
-  const eligiblePlayersForSet = useMemo(
-    () => getEligiblePlayers(players, currentSet),
+  const setAuctionEligibility = useMemo(
+    () => getSetAuctionEligibility(players, currentSet),
+    [players, currentSet],
+  );
+  const eligiblePlayersForSet = setAuctionEligibility.eligible;
+  const setAuctionRound = setAuctionEligibility.round;
+  const unsoldWaitingInSet = useMemo(
+    () =>
+      players.filter(
+        (player) => player.set === currentSet && player.status === "unsold",
+      ).length,
     [players, currentSet],
   );
 
@@ -251,12 +261,12 @@ function App() {
         };
       }
 
-      const isEligible =
-        selectedPlayer.set === prev.auction.currentSet &&
-        (selectedPlayer.status === "available" ||
-          selectedPlayer.status === "unsold");
-
-      if (!isEligible) {
+      const eligibleIds = new Set(
+        getEligiblePlayers(prev.players, prev.auction.currentSet).map(
+          (player) => player.id,
+        ),
+      );
+      if (!eligibleIds.has(playerId)) {
         setMessage("Player is not eligible for wheel selection.");
         return prev;
       }
@@ -604,6 +614,8 @@ function App() {
             currentSet={currentSet}
             currentPlayer={currentPlayer}
             eligiblePlayers={eligiblePlayersForSet}
+            setAuctionRound={setAuctionRound}
+            unsoldWaitingInSet={unsoldWaitingInSet}
             message={message}
             onSetChange={setCurrentSet}
             onWheelSpinStart={beginWheelSpin}

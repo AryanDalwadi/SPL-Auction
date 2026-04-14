@@ -30,6 +30,8 @@ function AuctionPanel({
   currentSet,
   currentPlayer,
   eligiblePlayers,
+  setAuctionRound,
+  unsoldWaitingInSet,
   message,
   onSetChange,
   onWheelSpinStart,
@@ -91,7 +93,8 @@ function AuctionPanel({
         <div>
           <h2 className="panel-title">Auction Panel</h2>
           <p className="section-note">
-            Spin the wheel and run manual bidding for the selected set.
+            Spin the wheel for the selected set. Unsold players join the wheel only after every
+            still-available player in that set has been sold or marked unsold.
           </p>
         </div>
         <div className={`set-logo set-badge-lg ${getSetUiClass(currentSet)}`}>
@@ -119,8 +122,27 @@ function AuctionPanel({
         </button>
       </div>
       <p className="helper-text helper-pill">
-        <span className="helper-count">{eligiblePlayers.length}</span> eligible in{' '}
-        <strong>{currentSet}</strong>
+        {setAuctionRound === 'unsold' ? (
+          <>
+            <span className="helper-count">{eligiblePlayers.length}</span> unsold (re-auction) in{' '}
+            <strong>{currentSet}</strong>
+          </>
+        ) : setAuctionRound === 'available' ? (
+          <>
+            <span className="helper-count">{eligiblePlayers.length}</span> available in{' '}
+            <strong>{currentSet}</strong>
+            {unsoldWaitingInSet > 0 ? (
+              <span className="helper-pill-hint">
+                {' '}
+                — {unsoldWaitingInSet} unsold after this round
+              </span>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <span className="helper-count">0</span> players left in <strong>{currentSet}</strong>
+          </>
+        )}
       </p>
 
       <div className="auction-layout">
@@ -130,7 +152,7 @@ function AuctionPanel({
             <div className="wheel-outer-ring">
               <div className="wheel-disc" style={wheelDiscStyle}>
                 {eligiblePlayers.length === 0 ? (
-                  <p className="wheel-empty">No available / unsold players in this set</p>
+                  <p className="wheel-empty">No players left in this set.</p>
                 ) : (
                   eligiblePlayers.map((player, index) => {
                     const n = eligiblePlayers.length
@@ -157,7 +179,7 @@ function AuctionPanel({
           </div>
         </div>
 
-               <div className="auction-side-column">
+        <div className="auction-side-column">
           <div
             className={`admin-pick-ribbon${isSpinning ? ' admin-pick-ribbon--spinning' : ''}${currentPlayer ? ' admin-pick-ribbon--active' : ''}`}
             aria-live="polite"

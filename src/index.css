@@ -372,6 +372,7 @@ tbody tr:hover {
 
 .helper-pill {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem;
   padding: 0.35rem 0.75rem;
@@ -394,6 +395,12 @@ tbody tr:hover {
   font-size: 0.85rem;
   color: #fff;
   background: linear-gradient(135deg, #0ea5e9, #10b981);
+}
+
+.helper-pill-hint {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 .auction-panel-card {
@@ -974,6 +981,40 @@ ol {
 .stat-chip-unsold {
   background: rgba(254, 243, 199, 0.75);
   border-color: rgba(245, 158, 11, 0.45);
+}
+
+.dashboard-table-note {
+  margin: 0.35rem 0 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.4;
+  max-width: 52rem;
+}
+
+.dashboard-team-spent {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.dashboard-card th .th-cap {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--text-muted);
+}
+
+.dashboard-spend-main {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #0f172a;
 }
 
 .dashboard-card .table-shell table {
