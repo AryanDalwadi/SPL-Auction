@@ -1,13 +1,20 @@
 import { useState } from 'react'
 
-function TeamManager({ teams, onAddTeam, onUpdateTeam, onShareTeamLink }) {
+function TeamManager({
+  teams,
+  onAddTeam,
+  onUpdateTeam,
+  onShareTeamLink,
+  onSetTeamLogo,
+  onNotify,
+}) {
   const [editingTeamId, setEditingTeamId] = useState(null)
   const [editTeamName, setEditTeamName] = useState('')
   const [editCaptainName, setEditCaptainName] = useState('')
   const [editTotalPoints, setEditTotalPoints] = useState('')
   const [shareLinksByTeamId, setShareLinksByTeamId] = useState({})
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
 
@@ -19,13 +26,39 @@ function TeamManager({ teams, onAddTeam, onUpdateTeam, onShareTeamLink }) {
       return
     }
 
+    const logoFile = formData.get('logo')
+    let logoDataUrl = null
+    if (logoFile instanceof File && logoFile.size > 0) {
+      try {
+        const { processImageFile } = await import('../utils/imageUpload.js')
+        logoDataUrl = await processImageFile(logoFile, { maxSide: 280 })
+      } catch (err) {
+        onNotify?.(err instanceof Error ? err.message : 'Logo upload failed.')
+        return
+      }
+    }
+
     onAddTeam({
       teamName,
       captainName,
       totalPoints,
+      logoDataUrl,
     })
 
     event.currentTarget.reset()
+  }
+
+  const handleTeamLogoFile = async (teamId, event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file?.size || !onSetTeamLogo) return
+    try {
+      const { processImageFile } = await import('../utils/imageUpload.js')
+      const url = await processImageFile(file, { maxSide: 280 })
+      onSetTeamLogo(teamId, url)
+    } catch (err) {
+      onNotify?.(err instanceof Error ? err.message : 'Logo upload failed.')
+    }
   }
 
   const startEdit = (team) => {
@@ -94,6 +127,10 @@ function TeamManager({ teams, onAddTeam, onUpdateTeam, onShareTeamLink }) {
           Total Points
           <input name="totalPoints" type="number" min="1" defaultValue="1200" required />
         </label>
+        <label>
+          Team logo (optional)
+          <input name="logo" type="file" accept="image/*" />
+        </label>
         <button type="submit">Add Team</button>
       </form>
 
@@ -101,6 +138,7 @@ function TeamManager({ teams, onAddTeam, onUpdateTeam, onShareTeamLink }) {
         <table>
         <thead>
           <tr>
+            <th>Logo</th>
             <th>Team</th>
             <th>Captain</th>
             <th>Total</th>
@@ -111,11 +149,44 @@ function TeamManager({ teams, onAddTeam, onUpdateTeam, onShareTeamLink }) {
         <tbody>
           {teams.length === 0 ? (
             <tr>
-              <td colSpan="5">No teams added yet.</td>
+              <td colSpan="6">No teams added yet.</td>
             </tr>
           ) : (
             teams.map((team) => (
               <tr key={team.id}>
+                <td className="media-table-cell">
+                  <div className="media-thumb-stack">
+                    {team.logoDataUrl ? (
+                      <img src={team.logoDataUrl} alt="" className="team-logo-thumb" />
+                    ) : (
+                      <span className="media-thumb-placeholder" aria-hidden="true">
+                        —
+                      </span>
+                    )}
+                    {editingTeamId !== team.id ? (
+                      <div className="media-thumb-actions">
+                        <label className="btn-ghost btn-tiny file-upload-label">
+                          {team.logoDataUrl ? 'Change' : 'Upload'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="sr-only-input"
+                            onChange={(e) => handleTeamLogoFile(team.id, e)}
+                          />
+                        </label>
+                        {team.logoDataUrl && onSetTeamLogo ? (
+                          <button
+                            type="button"
+                            className="btn-ghost btn-tiny"
+                            onClick={() => onSetTeamLogo(team.id, null)}
+                          >
+                            Clear
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                </td>
                 <td>
                   {editingTeamId === team.id ? (
                     <input value={editTeamName} onChange={(event) => setEditTeamName(event.target.value)} />

@@ -86,7 +86,7 @@ function App() {
     });
   };
 
-  const addTeam = ({ teamName, captainName, totalPoints }) => {
+  const addTeam = ({ teamName, captainName, totalPoints, logoDataUrl }) => {
     updateAuctionState((prev) => {
       const duplicateName = prev.teams.some(
         (team) => team.teamName.toLowerCase() === teamName.toLowerCase(),
@@ -102,6 +102,7 @@ function App() {
         captainName,
         totalPoints,
         remainingPoints: totalPoints,
+        logoDataUrl: logoDataUrl ?? null,
         spentBySet: {
           "Set A": 0,
           "Set B": 0,
@@ -116,6 +117,16 @@ function App() {
         teams: [...prev.teams, team],
       };
     });
+  };
+
+  const setTeamLogo = (teamId, logoDataUrl) => {
+    updateAuctionState((prev) => ({
+      ...prev,
+      teams: prev.teams.map((team) =>
+        team.id === teamId ? { ...team, logoDataUrl: logoDataUrl ?? null } : team,
+      ),
+    }));
+    setMessage(logoDataUrl ? "Team logo updated." : "Team logo removed.");
   };
 
   const updateTeam = ({ teamId, teamName, captainName, totalPoints }) => {
@@ -160,7 +171,7 @@ function App() {
     });
   };
 
-  const addPlayer = ({ name, category, set }) => {
+  const addPlayer = ({ name, category, set, photoDataUrl }) => {
     updateAuctionState((prev) => {
       const duplicatePlayer = prev.players.some(
         (player) => player.name.toLowerCase() === name.toLowerCase(),
@@ -175,6 +186,7 @@ function App() {
         name,
         category,
         set,
+        photoDataUrl: photoDataUrl ?? null,
         status: "available",
         soldToTeamId: null,
         finalBid: null,
@@ -186,6 +198,71 @@ function App() {
         players: [...prev.players, player],
       };
     });
+  };
+
+  const importPlayersFromRows = (rows) => {
+    if (!rows?.length) {
+      setMessage("No valid rows to import from the file.");
+      return;
+    }
+
+    updateAuctionState((prev) => {
+      const taken = new Set(
+        prev.players.map((player) => player.name.toLowerCase()),
+      );
+      const seenInFile = new Set();
+      const newPlayers = [];
+      const skippedDup = [];
+
+      for (const row of rows) {
+        const key = row.name.toLowerCase();
+        if (seenInFile.has(key)) {
+          skippedDup.push(row.name);
+          continue;
+        }
+        seenInFile.add(key);
+        if (taken.has(key)) {
+          skippedDup.push(row.name);
+          continue;
+        }
+        taken.add(key);
+        newPlayers.push({
+          id: createId(),
+          name: row.name,
+          category: row.category,
+          set: row.set,
+          photoDataUrl: null,
+          status: "available",
+          soldToTeamId: null,
+          finalBid: null,
+        });
+      }
+
+      const parts = [`Imported ${newPlayers.length} player(s) from Excel.`];
+      if (skippedDup.length) {
+        parts.push(
+          `Skipped (already in list): ${skippedDup.slice(0, 12).join(", ")}${skippedDup.length > 12 ? "…" : ""}.`,
+        );
+      }
+      setMessage(parts.join(" "));
+
+      return {
+        ...prev,
+        players: [...prev.players, ...newPlayers],
+      };
+    });
+  };
+
+  const setPlayerPhoto = (playerId, photoDataUrl) => {
+    updateAuctionState((prev) => ({
+      ...prev,
+      players: prev.players.map((player) =>
+        player.id === playerId
+          ? { ...player, photoDataUrl: photoDataUrl ?? null }
+          : player,
+      ),
+    }));
+    setMessage(photoDataUrl ? "Player photo updated." : "Player photo removed.");
   };
 
   const updatePlayer = ({ playerId, name, category, set }) => {
@@ -501,6 +578,7 @@ function App() {
         bid: player.finalBid,
       }));
 
+    // Omit logo / player photos from the URL payload to keep links within browser limits.
     const shareLink = buildTeamShareLink({
       teamName: team.teamName,
       captainName: team.captainName,
@@ -625,6 +703,8 @@ function App() {
             onAddTeam={addTeam}
             onUpdateTeam={updateTeam}
             onShareTeamLink={shareTeamLink}
+            onSetTeamLogo={setTeamLogo}
+            onNotify={setMessage}
           />
         </section>
       ) : null}
@@ -635,6 +715,9 @@ function App() {
             players={players}
             onAddPlayer={addPlayer}
             onUpdatePlayer={updatePlayer}
+            onImportPlayers={importPlayersFromRows}
+            onSetPlayerPhoto={setPlayerPhoto}
+            onNotify={setMessage}
           />
         </section>
       ) : null}

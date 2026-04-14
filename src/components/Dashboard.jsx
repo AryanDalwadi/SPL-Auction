@@ -101,10 +101,21 @@ function Dashboard({
             teams.map((team) => (
               <tr key={team.id}>
                 <td>
-                  {team.teamName}
-                  <span className="dashboard-team-spent">
-                    Total spent: {getTotalPointsSpentByTeam(team)}
-                  </span>
+                  <div className="dashboard-team-name-cell">
+                    {team.logoDataUrl ? (
+                      <img
+                        src={team.logoDataUrl}
+                        alt=""
+                        className="dashboard-team-logo-thumb"
+                      />
+                    ) : null}
+                    <div>
+                      {team.teamName}
+                      <span className="dashboard-team-spent">
+                        Total spent: {getTotalPointsSpentByTeam(team)}
+                      </span>
+                    </div>
+                  </div>
                 </td>
                 <td>{team.totalPoints}</td>
                 <td>{team.remainingPoints}</td>
@@ -147,7 +158,16 @@ function Dashboard({
               <ul className="sold-list">
                 {entry.players.map((player) => (
                   <li key={player.id} className="sold-list-item">
-                    <span className="sold-list-name">{player.name}</span>
+                    <div className="sold-list-name-wrap">
+                      {player.photoDataUrl ? (
+                        <img
+                          src={player.photoDataUrl}
+                          alt=""
+                          className="sold-list-photo"
+                        />
+                      ) : null}
+                      <span className="sold-list-name">{player.name}</span>
+                    </div>
                     <span className="sold-list-bid">{player.finalBid} pts</span>
                   </li>
                 ))}
@@ -187,6 +207,7 @@ function Dashboard({
         <table>
         <thead>
           <tr>
+            <th>Photo</th>
             <th>Name</th>
             <th>Category</th>
             <th>Set</th>
@@ -198,13 +219,24 @@ function Dashboard({
         <tbody>
           {filteredBoughtPlayers.length === 0 ? (
             <tr>
-              <td colSpan="6">No bought players found for selected team.</td>
+              <td colSpan="7">No bought players found for selected team.</td>
             </tr>
           ) : (
             filteredBoughtPlayers.map((player) => {
               const soldTeam = teams.find((team) => team.id === player.soldToTeamId)
               return (
                 <tr key={player.id}>
+                  <td className="media-table-cell">
+                    {player.photoDataUrl ? (
+                      <img
+                        src={player.photoDataUrl}
+                        alt=""
+                        className="player-photo-thumb"
+                      />
+                    ) : (
+                      <span className="media-thumb-placeholder is-round">—</span>
+                    )}
+                  </td>
                   <td>{player.name}</td>
                   <td>{player.category}</td>
                   <td>
