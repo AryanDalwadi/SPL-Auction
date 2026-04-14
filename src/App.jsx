@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
+import {
+  clearAuctioneerSession,
+  isAuctioneerAuthenticated,
+} from "./auth/auctioneerSession";
 import AuctionPanel from "./components/AuctionPanel";
 import AuctionRules from "./components/AuctionRules";
+import AuctioneerLogin from "./components/AuctioneerLogin";
 import Dashboard from "./components/Dashboard";
 import PlayerManager from "./components/PlayerManager";
 import TeamManager from "./components/TeamManager";
@@ -38,6 +43,9 @@ function App() {
   );
   const [message, setMessage] = useState("");
   const [activeSection, setActiveSection] = useState("team-management");
+  const [auctioneerAuthed, setAuctioneerAuthed] = useState(() =>
+    isAuctioneerAuthenticated(),
+  );
   const sharedTeamData = useMemo(() => readSharedTeamFromUrl(), []);
 
   const teams = auctionState.teams;
@@ -336,6 +344,8 @@ function App() {
         team,
         playerSet: player.set,
         bidAmount,
+        players: prev.players,
+        teamId,
       });
       if (!validation.valid) {
         setMessage(validation.message);
@@ -512,6 +522,11 @@ function App() {
     setActiveSection(sectionId);
   };
 
+  const signOutAuctioneer = () => {
+    clearAuctioneerSession();
+    setAuctioneerAuthed(false);
+  };
+
   if (sharedTeamData) {
     return (
       <main className="app-layout">
@@ -557,14 +572,31 @@ function App() {
     );
   }
 
+  if (!auctioneerAuthed) {
+    return (
+      <AuctioneerLogin onSuccess={() => setAuctioneerAuthed(true)} />
+    );
+  }
+
   return (
     <main className="app-layout">
       <header className="app-header">
-        <h1>SPL Season 4 - Gully Cricket Auction</h1>
-        <p>
-          Manage teams, players, and live auction flow with local storage
-          persistence.
-        </p>
+        <div className="app-header-inner">
+          <div className="app-header-text">
+            <h1>SPL Season 4 - Gully Cricket Auction</h1>
+            <p>
+              Manage teams, players, and live auction flow with local storage
+              persistence.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn-ghost btn-sign-out"
+            onClick={signOutAuctioneer}
+          >
+            Sign out
+          </button>
+        </div>
       </header>
 
       <nav className="menu-bar">

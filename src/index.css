@@ -99,6 +99,110 @@ body::after {
   color: rgba(236, 254, 255, 0.88);
 }
 
+.app-header-inner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.app-header-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.btn-sign-out {
+  flex-shrink: 0;
+  border-color: rgba(236, 254, 255, 0.45) !important;
+  color: #ecfeff !important;
+  background: rgba(15, 23, 42, 0.2) !important;
+}
+
+.btn-sign-out:hover {
+  background: rgba(15, 23, 42, 0.35) !important;
+}
+
+.auctioneer-login-layout {
+  min-height: 70vh;
+  place-content: center;
+}
+
+.auctioneer-login-card {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.auctioneer-login-title {
+  margin: 0.5rem 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.auctioneer-login-note {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.auctioneer-login-warning {
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+
+.auctioneer-login-warning code {
+  font-size: 0.8rem;
+}
+
+.auctioneer-login-dev-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(254, 243, 199, 0.45);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.auctioneer-login-dev-hint code {
+  font-size: 0.78rem;
+}
+
+.auctioneer-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auctioneer-login-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.auctioneer-login-label input {
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  font-size: 1rem;
+}
+
+.auctioneer-login-error {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+.auctioneer-login-submit {
+  width: 100%;
+  justify-content: center;
+}
+
 .season-tag {
   display: inline-block;
   background: rgba(255, 255, 255, 0.2);

@@ -246,7 +246,7 @@ function AuctionPanel({
 
       {message ? (
         <p
-          className={`info-message info-message-auction${/exceeds|not enough|must be greater|Select a team|not eligible|No current player|already sold|not found/i.test(message) ? " info-message--alert" : ""}`}
+          className={`info-message info-message-auction${/exceeds|not enough|must be greater|Select a team|not eligible|No current player|already sold|not found|already has|maximum|go over|ceiling/i.test(message) ? " info-message--alert" : ""}`}
         >
           {message}
         </p>

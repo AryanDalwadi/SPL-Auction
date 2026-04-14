@@ -4,6 +4,13 @@ export const SET_LIMITS = {
   'Set C': 1200,
 }
 
+/** Max number of bought players per team from each set (auction roster cap). */
+export const SET_ROSTER_LIMITS = {
+  'Set A': 2,
+  'Set B': 2,
+  'Set C': 3,
+}
+
 export const PLAYER_CATEGORIES = ['Batsman', 'Bowler', 'All-Rounder']
 export const PLAYER_SETS = Object.keys(SET_LIMITS)
 export const SET_LOGOS = {
@@ -63,7 +70,16 @@ export function getRemainingRoomUnderSetCap(team, setName) {
   return Math.max(0, cap - getTotalPointsSpentByTeam(team))
 }
 
-export function validateSale({ team, playerSet, bidAmount }) {
+export function countSoldPlayersForTeamInSet(players, teamId, setName) {
+  return players.filter(
+    (player) =>
+      player.status === 'sold' &&
+      player.soldToTeamId === teamId &&
+      player.set === setName,
+  ).length
+}
+
+export function validateSale({ team, playerSet, bidAmount, players, teamId }) {
   if (!team) {
     return { valid: false, message: 'Select a team before selling the player.' }
   }
@@ -74,6 +90,19 @@ export function validateSale({ team, playerSet, bidAmount }) {
 
   if (team.remainingPoints < bidAmount) {
     return { valid: false, message: 'Team does not have enough remaining points.' }
+  }
+
+  const rosterLimit = SET_ROSTER_LIMITS[playerSet]
+  if (
+    rosterLimit != null &&
+    players &&
+    teamId &&
+    countSoldPlayersForTeamInSet(players, teamId, playerSet) >= rosterLimit
+  ) {
+    return {
+      valid: false,
+      message: `${team.teamName} already has the maximum ${rosterLimit} bought players from ${playerSet}.`,
+    }
   }
 
   const cap = SET_LIMITS[playerSet]
